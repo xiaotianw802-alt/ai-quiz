@@ -1,0 +1,65 @@
+<view class="page">
+  <view class="header-card">
+    <view class="header-title" bindtap="onChangeServer">AI 刷题</view>
+    <view class="header-subtitle" bindtap="onChangeServer">智能解析 · 高效备考</view>
+    <view style="font-size:20rpx;opacity:0.4;margin-top:4rpx;" bindtap="onChangeServer">长按切换服务器</view>
+    <view class="stats-row">
+      <view class="stat-item">
+        <view class="stat-num">{{stats.total_q}}</view>
+        <view class="stat-label">总题量</view>
+      </view>
+      <view class="stat-divider"></view>
+      <view class="stat-item">
+        <view class="stat-num">{{stats.wrong_q}}</view>
+        <view class="stat-label">错题数</view>
+      </view>
+      <view class="stat-divider"></view>
+      <view class="stat-item">
+        <view class="stat-num">{{correctRate}}%</view>
+        <view class="stat-label">正确率</view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{!connected && !loading}}" class="warn-card">
+    <view class="warn-icon">⚠️</view>
+    <view>
+      <view class="warn-title">后端未连接</view>
+      <view class="warn-desc">点上方标题切换服务器地址</view>
+    </view>
+    <view class="btn-retry" bindtap="loadData">重试</view>
+  </view>
+
+  <view wx:if="{{loading}}" class="loading-box">
+    <view class="loading-icon">⏳</view>
+    <view>加载中...</view>
+  </view>
+
+  <view wx:if="{{!loading}}" class="section">
+    <view class="section-header">
+      <view class="section-title">📚 我的题库</view>
+      <view wx:if="{{banks.length === 0}}" class="section-action" bindtap="goUpload">+ 导入</view>
+    </view>
+
+    <view wx:if="{{banks.length === 0 && connected}}" class="empty-box">
+      <view class="empty-icon">📭</view>
+      <view class="empty-title">还没有题库</view>
+      <view class="empty-desc">上传文件，AI 自动识别题目</view>
+      <view class="btn-primary" bindtap="goUpload">📄 导入题库</view>
+    </view>
+
+    <view wx:for="{{banks}}" wx:key="id" class="bank-card">
+      <view class="bank-top">
+        <view class="bank-avatar">{{item.name[0]}}</view>
+        <view class="bank-info">
+          <view class="bank-name">{{item.name}}</view>
+          <view class="bank-meta">{{item.q_count}} 道题目{{item.wrong_count > 0 ? ' · ' + item.wrong_count + ' 道错题' : ''}}</view>
+        </view>
+      </view>
+      <view class="bank-actions">
+        <view class="bank-btn bank-btn-start" bindtap="goQuiz" data-bank-id="{{item.id}}">▶ 开始刷题</view>
+        <view class="bank-btn bank-btn-wrong" bindtap="goWrong" data-bank-id="{{item.id}}">📋 错题本{{item.wrong_count > 0 ? '(' + item.wrong_count + ')' : ''}}</view>
+      </view>
+    </view>
+  </view>
+</view>

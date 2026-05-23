@@ -1,0 +1,69 @@
+<view class="container">
+  <view wx:if="{{loading}}" class="loading">
+    <view style="font-size:60rpx;margin-bottom:20rpx;">⏳</view>
+    <view>加载题目中...</view>
+  </view>
+
+  <view wx:elif="{{showResult}}">
+    <view class="result-card">
+      <view class="result-emoji">{{quizResult.score >= 60 ? '🎉' : '💪'}}</view>
+      <view class="result-score">{{quizResult.correct}}/{{quizResult.total}}</view>
+      <view class="result-text" style="color:{{quizResult.score >= 60 ? '#2e7d32' : '#e94560'}};">正确率 {{quizResult.score}}%</view>
+      <view class="btn-primary" bindtap="retry" style="padding:20rpx 60rpx;">再来一轮</view>
+    </view>
+  </view>
+
+  <view wx:else>
+    <view style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16rpx;">
+      <view class="progress-bar" style="flex:1;margin-bottom:0;margin-right:16rpx;">
+        <view class="progress-fill" style="width:{{(currentIndex + 1) / questions.length * 100}}%;"></view>
+      </view>
+      <view class="count-btn" bindtap="onPickCount">{{quizCountText}}▼</view>
+    </view>
+
+    <view class="q-header">
+      <view class="tag tag-{{currentQuestion.type}}">{{typeTag}}</view>
+      <view class="q-number">{{currentIndex + 1}} / {{questions.length}}</view>
+    </view>
+
+    <view wx:if="{{currentQuestion}}" class="card">
+      <view class="q-content">{{currentQuestion.content}}</view>
+    </view>
+
+    <view wx:if="{{currentOptions.length > 0}}" style="margin-top:16rpx;">
+      <view wx:for="{{currentOptions}}" wx:key="val"
+        class="option-item {{item.selected ? 'option-selected' : ''}}"
+        data-val="{{item.val}}" bindtap="selectAnswer">
+        {{item.text}}
+      </view>
+    </view>
+
+    <view wx:if="{{currentOptions.length === 0}}" style="margin-top:16rpx;">
+      <textarea class="fill-input" placeholder="请在此输入你的答案" value="{{userAnswer}}" bindinput="onTextInput" auto-height maxlength="500" />
+    </view>
+
+    <view wx:if="{{questionState === 'answering'}}" style="margin-top:30rpx;">
+      <view class="nav-btn nav-btn-submit" bindtap="confirmAnswer" style="width:100%;text-align:center;">确认答案</view>
+      <view wx:if="{{currentIndex > 0}}" class="nav-btn nav-btn-prev" bindtap="goPrev" style="width:100%;text-align:center;margin-top:16rpx;">上一题</view>
+    </view>
+
+    <view wx:if="{{questionState === 'confirmed' && feedback}}">
+      <view class="feedback-box" style="margin-top:20px;padding:24px;border-radius:14px;{{feedback.isCorrect ? 'background:#e8f5e9;border:2px solid #4caf50;' : 'background:#ffebee;border:2px solid #f44336;'}}">
+        <view style="font-size:32rpx;font-weight:bold;{{feedback.isCorrect ? 'color:#2e7d32;' : 'color:#c62828;'}}">
+          {{feedback.isCorrect ? '✅ 回答正确！' : '❌ 回答错误'}}
+        </view>
+        <view wx:if="{{!feedback.isCorrect}}" style="margin-top:12rpx;">
+          <view style="font-size:26rpx;color:#666;">你的答案：{{feedback.myAnswer || '(未作答)'}}</view>
+        </view>
+        <view style="margin-top:8rpx;font-size:28rpx;font-weight:500;">正确答案：{{feedback.correctAnswer}}</view>
+        <view wx:if="{{feedback.analysis}}" style="margin-top:12rpx;font-size:24rpx;color:#666;line-height:1.6;">📖 {{feedback.analysis}}</view>
+      </view>
+
+      <view style="margin-top:24rpx;">
+        <view class="nav-btn nav-btn-next" bindtap="goNext" style="width:100%;text-align:center;">
+          {{currentIndex >= questions.length - 1 ? '查看成绩' : '下一题'}}
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

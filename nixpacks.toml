@@ -1,0 +1,12 @@
+﻿# Railway 构建配置
+[phases.setup]
+nixPkgs = ["nodejs_20"]
+
+[phases.install]
+cmds = ["npm install --prefix server", "npm install --prefix web"]
+
+[phases.build]
+cmds = ["npm run build --prefix web"]
+
+[start]
+cmd = "npm start --prefix server"

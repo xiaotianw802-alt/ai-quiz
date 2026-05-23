@@ -1,0 +1,35 @@
+﻿# Dependencies
+node_modules/
+
+# Build output
+web/dist/
+
+# Database (keep local copy, cloud will use /data)
+server/quiz.db
+server/quiz.db-shm
+server/quiz.db-wal
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Uploads (temporary)
+server/uploads/*
+
+# Source maps
+miniprogram/__sourcemap__/

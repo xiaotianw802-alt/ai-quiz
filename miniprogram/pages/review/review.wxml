@@ -1,0 +1,82 @@
+<view class="container">
+  <!-- 选择题库 -->
+  <view wx:if="{{mode==='select'}}">
+    <view class="card" style="background:linear-gradient(135deg,#c62828,#e94560);color:#fff;">
+      <view style="font-size:36rpx;font-weight:bold;">📋 错题本</view>
+      <view style="font-size:24rpx;opacity:0.7;margin-top:6rpx;">连续做对3次自动移出</view>
+    </view>
+
+    <view wx:if="{{loading}}" class="loading">
+      <view style="font-size:60rpx;margin-bottom:20rpx;">⏳</view>
+      加载中...
+    </view>
+
+    <view wx:elif="{{banks.length===0}}" class="empty-box">
+      <view class="empty-emoji">🎉</view>
+      <view class="empty-text">没有错题！</view>
+      <view style="color:#999;font-size:26rpx;margin-top:8rpx;">去刷题吧~</view>
+    </view>
+
+    <view wx:else style="margin-top:16rpx;">
+      <view wx:for="{{banks}}" wx:key="id" class="bank-card" bindtap="selectBank" data-bank-id="{{item.id}}">
+        <view>
+          <view class="bank-name">{{item.name}}</view>
+          <view class="bank-count" style="color:#c62828;">{{item.wrong_count}} 道错题</view>
+        </view>
+        <view class="bank-arrow">→</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 浏览错题 -->
+  <view wx:if="{{mode==='review'}}">
+    <view style="margin-bottom:16rpx;">
+      <view class="toggle-btn" bindtap="backToBanks" style="font-size:22rpx;padding:8rpx 20rpx;background:#f0f0f0;color:#666;">← 返回列表</view>
+    </view>
+
+    <view wx:if="{{loading}}" class="loading">
+      <view style="font-size:60rpx;margin-bottom:20rpx;">⏳</view>
+      加载中...
+    </view>
+
+    <view wx:elif="{{questions.length===0}}" class="empty-box">
+      <view class="empty-emoji">🎉</view>
+      <view class="empty-text">该题库没有错题</view>
+    </view>
+
+    <view wx:else>
+      <view class="progress-bar">
+        <view class="progress-fill" style="width:{{(currentIndex + 1) / questions.length * 100}}%;"></view>
+      </view>
+
+      <view class="q-header">
+        <view class="wrong-badge">错题</view>
+        <view class="q-number">{{currentIndex + 1}} / {{questions.length}}</view>
+      </view>
+
+      <view wx:if="{{currentQuestion}}" class="card">
+        <view class="q-content">{{currentQuestion.content}}</view>
+      </view>
+
+      <view wx:if="{{currentOptions.length > 0}}" style="margin-top:16rpx;">
+        <view wx:for="{{currentOptions}}" wx:key="text" class="option-item">{{item.text}}</view>
+      </view>
+
+      <view style="margin-top:16rpx;text-align:right;">
+        <view class="toggle-btn" bindtap="showAnswer">{{showAnswer ? '隐藏答案' : '查看答案'}}</view>
+      </view>
+
+      <view wx:if="{{showAnswer && currentQuestion}}" class="answer-box">
+        <view class="answer-label">正确答案</view>
+        <view class="answer-text">{{currentQuestion.answer || '暂无'}}</view>
+        <view wx:if="{{currentQuestion.analysis}}" class="answer-analysis">📖 {{currentQuestion.analysis}}</view>
+      </view>
+
+      <view class="q-nav">
+        <view class="nav-btn nav-btn-prev" bindtap="prev" style="opacity:{{currentIndex === 0 ? 0.3 : 1}};">上一题</view>
+        <view wx:if="{{currentIndex === questions.length - 1}}" class="nav-btn nav-btn-next" bindtap="loadWrongQuestions">刷新</view>
+        <view wx:else class="nav-btn nav-btn-next" bindtap="next">下一题</view>
+      </view>
+    </view>
+  </view>
+</view>

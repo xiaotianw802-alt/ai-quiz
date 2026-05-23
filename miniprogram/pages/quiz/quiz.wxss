@@ -1,0 +1,37 @@
+.container { padding: 24rpx; padding-bottom: 48rpx; }
+
+.progress-bar { height: 6rpx; background: #e0e0e0; border-radius: 3rpx; margin-bottom: 16rpx; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, #e94560, #0f3460); border-radius: 3rpx; }
+
+.q-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20rpx; }
+.q-number { font-size: 26rpx; color: #999; }
+
+.q-content { font-size: 32rpx; font-weight: 600; line-height: 1.7; color: #222; }
+
+.option-item { padding: 26rpx 28rpx; margin-bottom: 14rpx; background: #fff; border-radius: 14rpx; border: 2rpx solid #eee; font-size: 30rpx; }
+.option-selected { background: #fef0f3; border-color: #e94560; color: #c23152; }
+
+.fill-input { width: 100%; min-height: 200rpx; padding: 26rpx; background: #fff; border-radius: 14rpx; border: 2rpx solid #eee; font-size: 28rpx; box-sizing: border-box; line-height: 1.6; }
+
+.feedback-box { padding: 24rpx; border-radius: 14rpx; line-height: 1.6; }
+
+.q-nav { display: flex; justify-content: space-between; margin-top: 30rpx; gap: 20rpx; }
+.nav-btn { flex: 1; text-align: center; padding: 22rpx; border-radius: 14rpx; font-size: 28rpx; font-weight: 500; }
+.nav-btn-prev { background: #f0f0f0; color: #666; }
+.nav-btn-next { background: #e94560; color: #fff; }
+.nav-btn-submit { background: #0f3460; color: #fff; }
+
+.result-card { text-align: center; padding: 40rpx 28rpx; background: #fff; border-radius: 20rpx; margin-bottom: 20rpx; }
+.result-emoji { font-size: 72rpx; }
+.result-score { font-size: 56rpx; font-weight: 800; margin: 12rpx 0; }
+.result-text { font-size: 30rpx; margin-bottom: 28rpx; }
+
+.result-item { padding: 24rpx; background: #fff; border-radius: 14rpx; margin-bottom: 12rpx; }
+.result-tag { display: inline-block; padding: 4rpx 16rpx; border-radius: 6rpx; font-size: 22rpx; font-weight: 500; margin-right: 12rpx; }
+.result-correct { background: #e8f5e9; color: #2e7d32; }
+.result-wrong { background: #ffebee; color: #c62828; }
+.result-analysis { font-size: 24rpx; color: #888; margin-top: 10rpx; line-height: 1.6; }
+
+.loading { text-align: center; padding: 160rpx 0; color: #999; font-size: 28rpx; }
+
+.count-btn { font-size: 22rpx; padding: 6rpx 16rpx; background: #f0f0f0; border-radius: 8rpx; white-space: nowrap; }

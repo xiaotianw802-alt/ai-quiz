@@ -1,0 +1,28 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/quiz/quiz",
+    "pages/review/review",
+    "pages/upload/upload"
+  ],
+  "window": {
+    "navigationBarBackgroundColor": "#1a1a2e",
+    "navigationBarTitleText": "AI刷题",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#f5f5f5"
+  },
+  "tabBar": {
+    "color": "#999",
+    "selectedColor": "#e94560",
+    "backgroundColor": "#fff",
+    "list": [
+      { "pagePath": "pages/index/index", "text": "题库" },
+      { "pagePath": "pages/quiz/quiz", "text": "刷题" },
+      { "pagePath": "pages/review/review", "text": "错题" },
+      { "pagePath": "pages/upload/upload", "text": "导入" }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

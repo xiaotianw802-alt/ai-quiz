@@ -1,0 +1,35 @@
+<view class="container">
+  <view class="header-card">
+    <view class="header-title">📄 导入题库</view>
+    <view class="header-desc">支持 PDF · Word(.doc/.docx) · 超星HTML</view>
+  </view>
+
+  <view class="input-card">
+    <view class="input-label">题库名称（可选）</view>
+    <input class="input-field" placeholder="如：计算机网络" value="{{bankName}}" bindinput="onBankNameInput" />
+  </view>
+
+  <view style="display:flex;gap:12rpx;margin-bottom:16rpx;">
+    <view class="upload-btn" style="flex:1;" bindtap="chooseFile" data-type="pdf">📎 PDF</view>
+    <view class="upload-btn" style="flex:1;background:linear-gradient(135deg,#0f3460,#16213e);" bindtap="chooseFile" data-type="word">📝 Word</view>
+    <view class="upload-btn" style="flex:1;background:linear-gradient(135deg,#e65100,#bf360c);" bindtap="chooseFile" data-type="html">🌐 HTML</view>
+  </view>
+  <view class="upload-hint">PDF: 试卷扫描 · Word: .doc/.docx · HTML: 超星作业</view>
+
+  <view wx:if="{{uploading}}" style="text-align:center;padding:24rpx;color:#e94560;">⏳ 正在解析...</view>
+
+  <view wx:if="{{uploadResult}}" class="success-card">
+    <view class="success-title">✅ 导入成功</view>
+    <view class="success-info"><view>题库：{{uploadResult.bank_name}}</view><view>识别题目：{{uploadResult.count}} 道</view></view>
+  </view>
+
+  <view wx:if="{{uploadError}}" class="error-card">❌ {{uploadError}}</view>
+
+  <view class="section-title">📚 已有题库</view>
+  <view wx:if="{{banks.length===0}}" class="empty"><view style="font-size:60rpx;margin-bottom:12rpx;">📭</view>还没有题库</view>
+
+  <view wx:for="{{banks}}" wx:key="id" class="bank-card">
+    <view><view class="bank-name">{{item.name}}</view><view class="bank-count">{{item.q_count}} 道题目</view></view>
+    <view class="bank-arrow">→ 去刷题</view>
+  </view>
+</view>

@@ -1,0 +1,42 @@
+.page { min-height: 100vh; padding-bottom: 40rpx; }
+
+.header-card { background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460); padding: 48rpx 32rpx 40rpx; color: #fff; }
+.header-title { font-size: 48rpx; font-weight: 800; }
+.header-subtitle { font-size: 24rpx; opacity: 0.6; margin-top: 6rpx; }
+.stats-row { display: flex; margin-top: 36rpx; justify-content: space-around; }
+.stat-item { text-align: center; flex: 1; }
+.stat-num { font-size: 44rpx; font-weight: 800; }
+.stat-label { font-size: 22rpx; opacity: 0.6; margin-top: 4rpx; }
+.stat-divider { width: 1rpx; background: rgba(255,255,255,0.2); }
+
+.warn-card { margin: 24rpx; padding: 24rpx; background: #fff3e0; border-radius: 16rpx; display: flex; align-items: center; gap: 16rpx; }
+.warn-icon { font-size: 40rpx; }
+.warn-title { font-size: 28rpx; font-weight: bold; color: #e65100; }
+.warn-desc { font-size: 24rpx; color: #999; margin-top: 4rpx; }
+.btn-retry { margin-left: auto; padding: 10rpx 28rpx; background: #e65100; color: #fff; border-radius: 12rpx; font-size: 24rpx; }
+
+.loading-box { text-align: center; padding: 120rpx 0; color: #999; font-size: 28rpx; }
+.loading-icon { font-size: 60rpx; margin-bottom: 16rpx; }
+
+.section { padding: 0 24rpx; margin-top: 24rpx; }
+.section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16rpx; }
+.section-title { font-size: 32rpx; font-weight: bold; }
+.section-action { font-size: 26rpx; color: #e94560; font-weight: 500; }
+
+.empty-box { text-align: center; padding: 80rpx 40rpx; background: #fff; border-radius: 20rpx; }
+.empty-icon { font-size: 80rpx; margin-bottom: 20rpx; }
+.empty-title { font-size: 32rpx; font-weight: bold; color: #333; margin-bottom: 10rpx; }
+.empty-desc { font-size: 26rpx; color: #999; margin-bottom: 32rpx; }
+
+.bank-card { background: #fff; border-radius: 16rpx; padding: 28rpx; margin-bottom: 16rpx; }
+.bank-top { display: flex; align-items: center; gap: 20rpx; }
+.bank-avatar { width: 72rpx; height: 72rpx; border-radius: 18rpx; background: linear-gradient(135deg, #e94560, #0f3460); color: #fff; font-size: 36rpx; font-weight: bold; display: flex; align-items: center; justify-content: center; }
+.bank-info { flex: 1; }
+.bank-name { font-size: 30rpx; font-weight: bold; color: #333; }
+.bank-meta { font-size: 24rpx; color: #999; margin-top: 6rpx; }
+.bank-actions { display: flex; gap: 16rpx; margin-top: 24rpx; }
+.bank-btn { flex: 1; text-align: center; padding: 20rpx; border-radius: 12rpx; font-size: 26rpx; font-weight: 500; }
+.bank-btn-start { background: #e94560; color: #fff; }
+.bank-btn-wrong { background: #f5f5f5; color: #555; }
+
+.btn-primary { display: inline-block; padding: 24rpx 56rpx; background: #e94560; color: #fff; border-radius: 16rpx; font-size: 30rpx; font-weight: 500; }
