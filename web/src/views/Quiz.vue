@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="quiz-page">
     <div v-if="loading" class="loading-box">
       <el-icon class="loading-icon"><Loading /></el-icon>
@@ -6,7 +6,7 @@
     </div>
     
     <div v-else-if="showResult" class="result-card">
-      <div class="result-emoji">{{ quizResult.score >= 60 ? '' : '' }}</div>
+      <div class="result-emoji">{{ quizResult.score >= 60 ? '🎉' : '💭' }}</div>
       <div class="result-score">{{ quizResult.correct }}/{{ quizResult.total }}</div>
       <div class="result-text" :style="{ color: quizResult.score >= 60 ? '#2e7d32' : '#e94560' }">
         正确率 {{ quizResult.score }}%
@@ -35,7 +35,7 @@
       <div class="q-header">
         <el-tag :type="getTypeTagType(currentQuestion?.type)" effect="dark">{{ typeTag }}</el-tag>
         <span class="q-number">{{ currentIndex + 1 }} / {{ questions.length }}</span>
-        <el-button v-if="questionState === '"'"'answering'"'"'" link size="small" @click="saveAndExit">保存退出</el-button>
+        <el-button v-if="questionState === 'answering'" link size="small" @click="saveAndExit">保存退出</el-button>
       </div>
       
       <el-card class="q-card" v-if="currentQuestion">
@@ -44,26 +44,30 @@
       
       <div v-if="currentOptions.length > 0" class="options-list">
         <div v-for="option in currentOptions" :key="option.val" class="option-item"
-          :class="{ '"'"'option-selected'"'"': option.selected, '"'"'option-correct'"'"': questionState === '"'"'confirmed'"'"' && feedback?.correctAnswer?.includes(option.val), '"'"'option-wrong'"'"': questionState === '"'"'confirmed'"'"' && !feedback?.isCorrect && option.selected && !feedback?.correctAnswer?.includes(option.val) }"
+          :class="{
+            'option-selected': option.selected,
+            'option-correct': questionState === 'confirmed' && feedback?.correctAnswer?.includes(option.val),
+            'option-wrong': questionState === 'confirmed' && !feedback?.isCorrect && option.selected && !feedback?.correctAnswer?.includes(option.val)
+          }"
           @click="selectAnswer(option.val)">
           {{ option.text }}
         </div>
       </div>
       
       <div v-else class="fill-section">
-        <el-input v-model="userAnswer" type="textarea" :rows="4" placeholder="请在此输入你的答案" maxlength="500" show-word-limit :disabled="questionState === '"'"'confirmed'"'"'" />
+        <el-input v-model="userAnswer" type="textarea" :rows="4" placeholder="请在此输入你的答案" maxlength="500" show-word-limit :disabled="questionState === 'confirmed'" />
       </div>
       
-      <div v-if="questionState === '"'"'answering'"'"'" class="action-buttons">
+      <div v-if="questionState === 'answering'" class="action-buttons">
         <el-button type="primary" size="large" class="submit-btn" @click="confirmAnswer">确认答案</el-button>
         <el-button v-if="currentIndex > 0" size="large" class="prev-btn" @click="goPrev">上一题</el-button>
       </div>
       
-      <div v-if="questionState === '"'"'confirmed'"'"' && feedback" class="feedback-box">
-        <div class="feedback-title" :class="feedback.isCorrect === true ? '"'"'correct'"'"' : feedback.isCorrect === false ? '"'"'wrong'"'"' : '"'"'unknown'"'"'">
-          {{ feedback.isCorrect === true ? '"'"'回答正确！'"'"' : feedback.isCorrect === false ? '"'"'回答错误'"'"' : '"'"'答案待确认'"'"' }}
+      <div v-if="questionState === 'confirmed' && feedback" class="feedback-box">
+        <div class="feedback-title" :class="feedback.isCorrect === true ? 'correct' : feedback.isCorrect === false ? 'wrong' : 'unknown'">
+          {{ feedback.isCorrect === true ? '✅ 回答正确！' : feedback.isCorrect === false ? '❌ 回答错误' : '答案待确认' }}
         </div>
-        <div v-if="!feedback.isCorrect && feedback.isCorrect !== null" class="my-answer">你的答案：{{ feedback.myAnswer || '"'"'(未作答)'"'"' }}</div>
+        <div v-if="!feedback.isCorrect && feedback.isCorrect !== null" class="my-answer">你的答案：{{ feedback.myAnswer || '(未作答)' }}</div>
         
         <!-- 显示正确答案或补充答案按钮 -->
         <div v-if="feedback.hasAnswer" class="correct-answer">正确答案：{{ feedback.correctAnswer }}</div>
@@ -98,7 +102,7 @@
         </el-button>
         
         <el-button type="primary" size="large" class="next-btn" @click="goNext">
-          {{ currentIndex >= questions.length - 1 ? '"'"'查看成绩'"'"' : '"'"'下一题'"'"' }}
+          {{ currentIndex >= questions.length - 1 ? '查看成绩' : '下一题' }}
         </el-button>
       </div>
     </template>
@@ -106,46 +110,46 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from '"'"'vue'"'"'
-import { useRoute } from '"'"'vue-router'"'"'
-import { ElMessage } from '"'"'element-plus'"'"'
-import { Loading, ArrowDown, MagicStick } from '"'"'@element-plus/icons-vue'"'"'
-import { quizApi, questionApi } from '"'"'../utils/api'"'"'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { useRoute } from 'vue-router'
+import { ElMessage } from 'element-plus'
+import { Loading, ArrowDown, MagicStick } from '@element-plus/icons-vue'
+import { quizApi, questionApi } from '../utils/api'
 
 const route = useRoute()
-const bankId = ref('"'"''"'"')
+const bankId = ref('')
 const questions = ref([])
 const currentIndex = ref(0)
 const currentQuestion = ref(null)
 const currentOptions = ref([])
-const userAnswer = ref('"'"''"'"')
-const questionState = ref('"'"'answering'"'"')
+const userAnswer = ref('')
+const questionState = ref('answering')
 const feedback = ref(null)
 const correctCount = ref(0)
 const totalCount = ref(0)
 const showResult = ref(false)
 const quizResult = ref(null)
 const loading = ref(true)
-const typeTag = ref('"'"''"'"')
+const typeTag = ref('')
 const quizCount = ref(30)
-const quizCountText = ref('"'"'30 题'"'"')
+const quizCountText = ref('30 题')
 const hasUnfinished = ref(false)
 
 // 新增：补充答案
-const newAnswer = ref('"'"''"'"')
-const newAnalysis = ref('"'"''"'"')
+const newAnswer = ref('')
+const newAnalysis = ref('')
 
 // 新增：AI解析
-const aiExplanation = ref('"'"''"'"')
+const aiExplanation = ref('')
 const loadingAI = ref(false)
 
-const typeNames = { single: '"'"'单选'"'"', multi: '"'"'多选'"'"', judge: '"'"'判断'"'"', fill: '"'"'填空'"'"', essay: '"'"'简答'"'"' }
+const typeNames = { single: '单选', multi: '多选', judge: '判断', fill: '填空', essay: '简答' }
 
-const getTypeTagType = (type) => ({ single: '"'"'primary'"'"', multi: '"'"'success'"'"', judge: '"'"'warning'"'"', fill: '"'"'info'"'"', essay: '"'"'danger'"'"' }[type] || '"'"'info'"'"')
+const getTypeTagType = (type) => ({ single: 'primary', multi: 'success', judge: 'warning', fill: 'info', essay: 'danger' }[type] || 'info')
 
 const handleCountChange = (command) => {
-  const counts = { '"'"'10'"'"': 10, '"'"'30'"'"': 30, '"'"'50'"'"': 50, '"'"'100'"'"': 100, '"'"'999'"'"': 999 }
-  const texts = { '"'"'10'"'"': '"'"'10 题'"'"', '"'"'30'"'"': '"'"'30 题'"'"', '"'"'50'"'"': '"'"'50 题'"'"', '"'"'100'"'"': '"'"'100 题'"'"', '"'"'999'"'"': '"'"'全部'"'"' }
+  const counts = { '10': 10, '30': 30, '50': 50, '100': 100, '999': 999 }
+  const texts = { '10': '10 题', '30': '30 题', '50': '50 题', '100': '100 题', '999': '全部' }
   quizCount.value = counts[command]
   quizCountText.value = texts[command]
   loadQuestions()
@@ -160,11 +164,11 @@ const saveProgress = () => {
     totalCount: totalCount.value,
     timestamp: Date.now()
   }
-  localStorage.setItem('"'"'quizProgress'"'"', JSON.stringify(progress))
+  localStorage.setItem('quizProgress', JSON.stringify(progress))
 }
 
 const loadProgress = () => {
-  const saved = localStorage.getItem('"'"'quizProgress'"'"')
+  const saved = localStorage.getItem('quizProgress')
   if (!saved) return null
   try {
     return JSON.parse(saved)
@@ -172,7 +176,7 @@ const loadProgress = () => {
 }
 
 const clearProgress = () => {
-  localStorage.removeItem('"'"'quizProgress'"'"')
+  localStorage.removeItem('quizProgress')
 }
 
 const loadQuestions = async () => {
@@ -185,11 +189,11 @@ const loadQuestions = async () => {
       correctCount.value = saved.correctCount
       totalCount.value = saved.totalCount
       hasUnfinished.value = true
-      ElMessage.success('"'"'已恢复上次进度'"'"')
+      ElMessage.success('已恢复上次进度')
     } else {
       const data = await quizApi.start(bankId.value, quizCount.value)
       if (!data || data.length === 0) {
-        ElMessage.warning('"'"'题库为空'"'"')
+        ElMessage.warning('题库为空')
         loading.value = false
         return
       }
@@ -201,17 +205,17 @@ const loadQuestions = async () => {
       clearProgress()
     }
     
-    questionState.value = '"'"'answering'"'"'
-    userAnswer.value = '"'"''"'"'
+    questionState.value = 'answering'
+    userAnswer.value = ''
     feedback.value = null
-    newAnswer.value = '"'"''"'"'
-    newAnalysis.value = '"'"''"'"'
-    aiExplanation.value = '"'"''"'"'
+    newAnswer.value = ''
+    newAnalysis.value = ''
+    aiExplanation.value = ''
     loadingAI.value = false
     showResult.value = false
     updateCurrent()
   } catch (e) {
-    ElMessage.error('"'"'加载失败'"'"')
+    ElMessage.error('加载失败')
   } finally {
     loading.value = false
   }
@@ -224,20 +228,20 @@ const updateCurrent = () => {
   const options = q.options ? q.options.split(/\r?\n/).filter(o => o.trim()) : []
   currentOptions.value = options.map(opt => {
     const val = opt.slice(0, 1)
-    const selected = q.type === '"'"'multi'"'"' ? (userAnswer.value || '"'"''"'"').includes(val) : userAnswer.value === val
+    const selected = q.type === 'multi' ? (userAnswer.value || '').includes(val) : userAnswer.value === val
     return { text: opt, val, selected }
   })
   typeTag.value = typeNames[q.type] || q.type
 }
 
 const selectAnswer = (val) => {
-  if (questionState.value !== '"'"'answering'"'"') return
+  if (questionState.value !== 'answering') return
   const q = currentQuestion.value
   if (!q) return
-  if (q.type === '"'"'multi'"'"') {
-    let cur = userAnswer.value || '"'"''"'"'
-    cur = cur.includes(val) ? cur.replace(val, '"'"''"'"') : cur + val
-    userAnswer.value = cur.split('"'"''"'"').sort().join('"'"''"'"')
+  if (q.type === 'multi') {
+    let cur = userAnswer.value || ''
+    cur = cur.includes(val) ? cur.replace(val, '') : cur + val
+    userAnswer.value = cur.split('').sort().join('')
   } else {
     userAnswer.value = val
   }
@@ -248,9 +252,9 @@ const confirmAnswer = async () => {
   const q = currentQuestion.value
   if (!q) return
   const ans = userAnswer.value
-  if (!ans && currentOptions.value.length > 0) { ElMessage.warning('"'"'请先选择答案'"'"'); return }
+  if (!ans && currentOptions.value.length > 0) { ElMessage.warning('请先选择答案'); return }
   try {
-    const r = await questionApi.checkAnswer(q.id, ans || '"'"''"'"')
+    const r = await questionApi.checkAnswer(q.id, ans || '')
     feedback.value = { 
       isCorrect: r.is_correct, 
       myAnswer: ans, 
@@ -258,14 +262,14 @@ const confirmAnswer = async () => {
       analysis: r.analysis,
       hasAnswer: r.has_answer
     }
-    questionState.value = '"'"'confirmed'"'"'
+    questionState.value = 'confirmed'
     if (r.is_correct === true) correctCount.value++
     totalCount.value++
     saveProgress()
     
     // 自动获取AI解析
     getAIExplanation()
-  } catch (e) { ElMessage.error('"'"'判断失败'"'"') }
+  } catch (e) { ElMessage.error('判断失败') }
 }
 
 // 新增：获取AI解析
@@ -280,7 +284,7 @@ const getAIExplanation = async () => {
     const r = await quizApi.aiTutor(questionText)
     aiExplanation.value = r.answer || r
   } catch (e) {
-    console.error('"'"'AI解析失败'"'"', e)
+    console.error('AI解析失败', e)
   } finally {
     loadingAI.value = false
   }
@@ -289,7 +293,7 @@ const getAIExplanation = async () => {
 // 新增：提交新答案
 const submitNewAnswer = async () => {
   if (!newAnswer.value.trim()) {
-    ElMessage.warning('"'"'请输入答案'"'"')
+    ElMessage.warning('请输入答案')
     return
   }
   try {
@@ -306,21 +310,21 @@ const submitNewAnswer = async () => {
     q.analysis = newAnalysis.value
     
     // 重新判断对错
-    const { checkAnswer } = await import('"'"'../utils/answerCheck'"'"')
+    const { checkAnswer } = await import('../utils/answerCheck')
     feedback.value.isCorrect = checkAnswer(feedback.value.myAnswer, newAnswer.value, q.type)
     if (feedback.value.isCorrect) correctCount.value++
     
-    ElMessage.success('"'"'答案已保存'"'"')
-    newAnswer.value = '"'"''"'"'
-    newAnalysis.value = '"'"''"'"'
+    ElMessage.success('答案已保存')
+    newAnswer.value = ''
+    newAnalysis.value = ''
   } catch (e) {
-    ElMessage.error('"'"'保存失败'"'"')
+    ElMessage.error('保存失败')
   }
 }
 
 const saveAndExit = () => {
   saveProgress()
-  ElMessage.success('"'"'进度已保存'"'"')
+  ElMessage.success('进度已保存')
 }
 
 const continueQuiz = () => {
@@ -332,12 +336,12 @@ const continueQuiz = () => {
 const goPrev = () => { 
   if (currentIndex.value <= 0) return
   currentIndex.value--
-  questionState.value = '"'"'answering'"'"'
-  userAnswer.value = '"'"''"'"'
+  questionState.value = 'answering'
+  userAnswer.value = ''
   feedback.value = null
-  newAnswer.value = '"'"''"'"'
-  newAnalysis.value = '"'"''"'"'
-  aiExplanation.value = '"'"''"'"'
+  newAnswer.value = ''
+  newAnalysis.value = ''
+  aiExplanation.value = ''
   loadingAI.value = false
   updateCurrent()
   saveProgress()
@@ -351,12 +355,12 @@ const goNext = () => {
     return
   }
   currentIndex.value++
-  questionState.value = '"'"'answering'"'"'
-  userAnswer.value = '"'"''"'"'
+  questionState.value = 'answering'
+  userAnswer.value = ''
   feedback.value = null
-  newAnswer.value = '"'"''"'"'
-  newAnalysis.value = '"'"''"'"'
-  aiExplanation.value = '"'"''"'"'
+  newAnswer.value = ''
+  newAnalysis.value = ''
+  aiExplanation.value = ''
   loadingAI.value = false
   updateCurrent()
   saveProgress()
@@ -375,7 +379,7 @@ onBeforeUnmount(() => {
 })
 
 onMounted(() => { 
-  bankId.value = localStorage.getItem('"'"'quizBankId'"'"') || '"'"''"'"'
+  bankId.value = localStorage.getItem('quizBankId') || ''
   loadQuestions() 
 })
 </script>
