@@ -3,8 +3,8 @@ const multer = require('multer');
 const path = require('path');
 const router = express.Router();
 const { authMiddleware } = require('../middleware/auth');
+const { fillMissingAnswers, updateQuestionAnswers } = require('../utils/autoFillAnswers');
 
-// 所有路由都需要认证
 router.use(authMiddleware);
 
 const storage = multer.diskStorage({
@@ -33,17 +33,29 @@ router.post('/pdf', upload.single('file'), async (req, res) => {
     if (!req.file) return res.status(400).json({ ok: false, error: '请上传文件' });
     const { parsePDF } = require('../pdfParser');
     const { parseQuestionsFromText, parseQuestionsFromImages } = require('../aiService');
-    const { createBank, addQuestions } = require('../db');
+    const { createBank, addQuestions, getDB } = require('../db');
+    
     const result = await parsePDF(req.file.path);
     let questions;
     if (result.text) questions = await parseQuestionsFromText(result.text);
     else if (result.images && result.images.length > 0) questions = await parseQuestionsFromImages(result.images);
     else return res.status(400).json({ ok: false, error: 'PDF无法识别' });
+    
     if (!Array.isArray(questions) || questions.length === 0) return res.json({ ok: true, data: { count: 0, message: '未识别到题目' } });
+    
+    // 自动为无答案题目补答案
+    const noAnswerCount = questions.filter(q => !q.answer || q.answer.trim() === '').length;
+    if (noAnswerCount > 0) {
+      console.log(`[Upload] 发现 ${noAnswerCount} 道无答案题目，正在用AI补全...`);
+      questions = await fillMissingAnswers(questions);
+    }
+    
     const bankName = req.body.bank_name || ('题库_' + new Date().toLocaleDateString('zh-CN'));
     const bank = createBank(req.userId, bankName);
-    addQuestions(bank.lastInsertRowid, questions);
-    res.json({ ok: true, data: { bank_id: bank.lastInsertRowid, bank_name: bankName, count: questions.length } });
+    const bankId = bank.lastInsertRowid;
+    addQuestions(bankId, questions);
+    
+    res.json({ ok: true, data: { bank_id: bankId, bank_name: bankName, count: questions.length, filled: noAnswerCount } });
   } catch (e) { console.error('[PDF]', e); res.status(500).json({ ok: false, error: e.message }); }
 });
 
@@ -53,13 +65,22 @@ router.post('/html', upload.single('file'), async (req, res) => {
     if (!req.file) return res.status(400).json({ ok: false, error: '请上传文件' });
     const { parseChaoxingHTML } = require('../htmlParser');
     const { createBank, addQuestions } = require('../db');
-    const questions = parseChaoxingHTML(req.file.path);
+    
+    let questions = parseChaoxingHTML(req.file.path);
     if (!Array.isArray(questions) || questions.length === 0) return res.json({ ok: true, data: { count: 0 } });
+    
+    // 自动为无答案题目补答案
+    const noAnswerCount = questions.filter(q => !q.answer || q.answer.trim() === '').length;
+    if (noAnswerCount > 0) {
+      console.log(`[Upload] 发现 ${noAnswerCount} 道无答案题目，正在用AI补全...`);
+      questions = await fillMissingAnswers(questions);
+    }
+    
     const bankName = req.body.bank_name || req.file.originalname.replace(/\.(html|htm)$/i, '');
     const bank = createBank(req.userId, bankName);
     addQuestions(bank.lastInsertRowid, questions);
-    console.log(`[HTML] ${bankName}, ${questions.length}题`);
-    res.json({ ok: true, data: { bank_id: bank.lastInsertRowid, bank_name: bankName, count: questions.length } });
+    console.log(`[HTML] ${bankName}, ${questions.length}题, 补全${noAnswerCount}题`);
+    res.json({ ok: true, data: { bank_id: bank.lastInsertRowid, bank_name: bankName, count: questions.length, filled: noAnswerCount } });
   } catch (e) { console.error('[HTML]', e); res.status(500).json({ ok: false, error: e.message }); }
 });
 
@@ -76,14 +97,21 @@ router.post('/word', upload.single('file'), async (req, res) => {
     if (!text || text.length < 20) return res.status(400).json({ ok: false, error: 'Word文档无法提取文本，请确认内容' });
 
     console.log('[Word] AI识别题目中...');
-    const questions = await parseQuestionsFromText(text);
+    let questions = await parseQuestionsFromText(text);
     if (!Array.isArray(questions) || questions.length === 0) return res.json({ ok: true, data: { count: 0, message: '未识别到题目' } });
+
+    // 自动为无答案题目补答案
+    const noAnswerCount = questions.filter(q => !q.answer || q.answer.trim() === '').length;
+    if (noAnswerCount > 0) {
+      console.log(`[Upload] 发现 ${noAnswerCount} 道无答案题目，正在用AI补全...`);
+      questions = await fillMissingAnswers(questions);
+    }
 
     const bankName = req.body.bank_name || req.file.originalname.replace(/\.(docx|doc)$/i, '');
     const bank = createBank(req.userId, bankName);
     addQuestions(bank.lastInsertRowid, questions);
-    console.log(`[Word] ${bankName}, ${questions.length}题`);
-    res.json({ ok: true, data: { bank_id: bank.lastInsertRowid, bank_name: bankName, count: questions.length } });
+    console.log(`[Word] ${bankName}, ${questions.length}题, 补全${noAnswerCount}题`);
+    res.json({ ok: true, data: { bank_id: bank.lastInsertRowid, bank_name: bankName, count: questions.length, filled: noAnswerCount } });
   } catch (e) { console.error('[Word]', e); res.status(500).json({ ok: false, error: e.message }); }
 });
 
