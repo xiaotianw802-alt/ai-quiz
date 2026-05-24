@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getBanks, getQuestions, getWrongQuestions, getTotalStats, getWrongStatsByBank, isQuestionOwner, saveRecord } = require('../db');
+const { getBanks, getQuestions, getWrongQuestions, getTotalStats, getWrongStatsByBank, isQuestionOwner, saveRecord, getDB } = require('../db');
 const { authMiddleware } = require('../middleware/auth');
 const { checkAnswer } = require('../utils/answerCheck');
 
@@ -39,7 +39,7 @@ router.get('/wrong', (req, res) => {
 router.post('/check', (req, res) => {
   try {
     const { question_id, user_answer } = req.body;
-    const db = require('../db').getDB();
+    const db = getDB();
     if (!isQuestionOwner(req.userId, question_id)) {
       return res.status(403).json({ ok: false, error: '无权访问该题目' });
     }
@@ -47,7 +47,25 @@ router.post('/check', (req, res) => {
     if (!q) return res.status(404).json({ ok: false, error: '题目不存在' });
     const isCorrect = checkAnswer(user_answer, q.answer, q.type);
     saveRecord(req.userId, question_id, user_answer, isCorrect);
-    res.json({ ok: true, data: { is_correct: isCorrect, answer: q.answer, analysis: q.analysis } });
+    res.json({ ok: true, data: { is_correct: isCorrect, answer: q.answer, analysis: q.analysis, has_answer: !!(q.answer && q.answer.trim()) } });
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+});
+
+// 补充/更新题目答案
+router.post('/update-answer', (req, res) => {
+  try {
+    const { question_id, answer, analysis } = req.body;
+    if (!question_id) return res.status(400).json({ ok: false, error: '缺少题目ID' });
+    
+    const db = getDB();
+    if (!isQuestionOwner(req.userId, question_id)) {
+      return res.status(403).json({ ok: false, error: '无权修改该题目' });
+    }
+    
+    const stmt = db.prepare('UPDATE questions SET answer = ?, analysis = ? WHERE id = ?');
+    stmt.run(answer || '', analysis || '', question_id);
+    
+    res.json({ ok: true, data: { message: '答案已更新' } });
   } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
 });
 

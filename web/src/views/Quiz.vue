@@ -1,12 +1,10 @@
 <template>
   <div class="quiz-page">
-    <!-- 加载中 -->
     <div v-if="loading" class="loading-box">
       <el-icon class="loading-icon"><Loading /></el-icon>
       <span>加载题目中...</span>
     </div>
     
-    <!-- 答题结果 -->
     <div v-else-if="showResult" class="result-card">
       <div class="result-emoji">{{ quizResult.score >= 60 ? '' : '' }}</div>
       <div class="result-score">{{ quizResult.correct }}/{{ quizResult.total }}</div>
@@ -17,7 +15,6 @@
       <el-button link @click="continueQuiz" v-if="hasUnfinished">继续上次进度</el-button>
     </div>
     
-    <!-- 答题界面 -->
     <template v-else>
       <div class="progress-header">
         <el-progress :percentage="Math.round((currentIndex + 1) / questions.length * 100)" :stroke-width="8" class="progress-bar" />
@@ -67,7 +64,20 @@
           {{ feedback.isCorrect === true ? '回答正确！' : feedback.isCorrect === false ? '回答错误' : '答案待确认' }}
         </div>
         <div v-if="!feedback.isCorrect && feedback.isCorrect !== null" class="my-answer">你的答案：{{ feedback.myAnswer || '(未作答)' }}</div>
-        <div class="correct-answer">正确答案：{{ feedback.correctAnswer }}</div>
+        
+        <!-- 显示正确答案或补充答案按钮 -->
+        <div v-if="feedback.hasAnswer" class="correct-answer">正确答案：{{ feedback.correctAnswer }}</div>
+        <div v-else class="no-answer-box">
+          <el-alert type="warning" :closable="false" show-icon>
+            <template #title>本题暂无答案</template>
+          </el-alert>
+          <div class="add-answer-section">
+            <el-input v-model="newAnswer" placeholder="请输入正确答案" size="small" style="margin-bottom: 8px;" />
+            <el-input v-model="newAnalysis" type="textarea" :rows="2" placeholder="请输入解析（可选）" size="small" style="margin-bottom: 8px;" />
+            <el-button type="primary" size="small" @click="submitNewAnswer">提交答案</el-button>
+          </div>
+        </div>
+        
         <div v-if="feedback.analysis" class="analysis">{{ feedback.analysis }}</div>
         <el-button type="primary" size="large" class="next-btn" @click="goNext">
           {{ currentIndex >= questions.length - 1 ? '查看成绩' : '下一题' }}
@@ -103,6 +113,10 @@ const quizCount = ref(30)
 const quizCountText = ref('30 题')
 const hasUnfinished = ref(false)
 
+// 新增：补充答案
+const newAnswer = ref('')
+const newAnalysis = ref('')
+
 const typeNames = { single: '单选', multi: '多选', judge: '判断', fill: '填空', essay: '简答' }
 
 const getTypeTagType = (type) => ({ single: 'primary', multi: 'success', judge: 'warning', fill: 'info', essay: 'danger' }[type] || 'info')
@@ -115,7 +129,6 @@ const handleCountChange = (command) => {
   loadQuestions()
 }
 
-// 保存进度到 localStorage
 const saveProgress = () => {
   const progress = {
     bankId: bankId.value,
@@ -128,7 +141,6 @@ const saveProgress = () => {
   localStorage.setItem('quizProgress', JSON.stringify(progress))
 }
 
-// 加载进度
 const loadProgress = () => {
   const saved = localStorage.getItem('quizProgress')
   if (!saved) return null
@@ -137,7 +149,6 @@ const loadProgress = () => {
   } catch { return null }
 }
 
-// 清除进度
 const clearProgress = () => {
   localStorage.removeItem('quizProgress')
 }
@@ -145,10 +156,8 @@ const clearProgress = () => {
 const loadQuestions = async () => {
   loading.value = true
   try {
-    // 检查是否有保存的进度
     const saved = loadProgress()
     if (saved && saved.bankId === bankId.value && saved.questions && saved.questions.length > 0) {
-      // 恢复进度
       questions.value = saved.questions
       currentIndex.value = saved.currentIndex
       correctCount.value = saved.correctCount
@@ -156,7 +165,6 @@ const loadQuestions = async () => {
       hasUnfinished.value = true
       ElMessage.success('已恢复上次进度')
     } else {
-      // 加载新题目
       const data = await quizApi.start(bankId.value, quizCount.value)
       if (!data || data.length === 0) {
         ElMessage.warning('题库为空')
@@ -174,6 +182,8 @@ const loadQuestions = async () => {
     questionState.value = 'answering'
     userAnswer.value = ''
     feedback.value = null
+    newAnswer.value = ''
+    newAnalysis.value = ''
     showResult.value = false
     updateCurrent()
   } catch (e) {
@@ -217,13 +227,50 @@ const confirmAnswer = async () => {
   if (!ans && currentOptions.value.length > 0) { ElMessage.warning('请先选择答案'); return }
   try {
     const r = await questionApi.checkAnswer(q.id, ans || '')
-    feedback.value = { isCorrect: r.is_correct, myAnswer: ans, correctAnswer: r.answer, analysis: r.analysis }
+    feedback.value = { 
+      isCorrect: r.is_correct, 
+      myAnswer: ans, 
+      correctAnswer: r.answer, 
+      analysis: r.analysis,
+      hasAnswer: r.has_answer
+    }
     questionState.value = 'confirmed'
     if (r.is_correct === true) correctCount.value++
     totalCount.value++
-    // 保存进度
     saveProgress()
   } catch (e) { ElMessage.error('判断失败') }
+}
+
+// 新增：提交新答案
+const submitNewAnswer = async () => {
+  if (!newAnswer.value.trim()) {
+    ElMessage.warning('请输入答案')
+    return
+  }
+  try {
+    const q = currentQuestion.value
+    await questionApi.updateAnswer(q.id, newAnswer.value, newAnalysis.value)
+    
+    // 更新本地反馈
+    feedback.value.correctAnswer = newAnswer.value
+    feedback.value.analysis = newAnalysis.value
+    feedback.value.hasAnswer = true
+    
+    // 更新题目数据
+    q.answer = newAnswer.value
+    q.analysis = newAnalysis.value
+    
+    // 重新判断对错
+    const { checkAnswer } = await import('../utils/answerCheck')
+    feedback.value.isCorrect = checkAnswer(feedback.value.myAnswer, newAnswer.value, q.type)
+    if (feedback.value.isCorrect) correctCount.value++
+    
+    ElMessage.success('答案已保存')
+    newAnswer.value = ''
+    newAnalysis.value = ''
+  } catch (e) {
+    ElMessage.error('保存失败')
+  }
 }
 
 const saveAndExit = () => {
@@ -243,6 +290,8 @@ const goPrev = () => {
   questionState.value = 'answering'
   userAnswer.value = ''
   feedback.value = null
+  newAnswer.value = ''
+  newAnalysis.value = ''
   updateCurrent()
   saveProgress()
 }
@@ -258,6 +307,8 @@ const goNext = () => {
   questionState.value = 'answering'
   userAnswer.value = ''
   feedback.value = null
+  newAnswer.value = ''
+  newAnalysis.value = ''
   updateCurrent()
   saveProgress()
 }
@@ -268,7 +319,6 @@ const retry = () => {
   loadQuestions()
 }
 
-// 页面关闭前保存进度
 onBeforeUnmount(() => {
   if (!showResult.value && questions.value.length > 0) {
     saveProgress()
@@ -314,6 +364,11 @@ onMounted(() => {
 .correct-answer { font-size: 16px; font-weight: 500; color: #333; margin-bottom: 12px; }
 .analysis { color: #666; font-size: 14px; line-height: 1.6; margin-bottom: 20px; padding: 12px; background: #fff; border-radius: 8px; }
 .next-btn { width: 100%; }
+
+/* 新增：无答案区域样式 */
+.no-answer-box { margin: 16px 0; }
+.add-answer-section { margin-top: 12px; padding: 12px; background: #fff; border-radius: 8px; }
+
 @media (max-width: 768px) {
   .result-card { padding: 30px 20px; }
   .result-score { font-size: 36px; }

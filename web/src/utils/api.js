@@ -39,6 +39,7 @@ export const questionApi = {
   getQuestions: (bankId, limit = 30) => request.get(`/api/questions/list?bank_id=${bankId || ''}&limit=${limit}`).then(r => r.data),
   getWrongQuestions: (bankId, limit = 30) => request.get(`/api/questions/wrong?bank_id=${bankId || ''}&limit=${limit}`).then(r => r.data),
   checkAnswer: (questionId, userAnswer) => request.post('/api/questions/check', { question_id: questionId, user_answer: userAnswer }).then(r => r.data),
+  updateAnswer: (questionId, answer, analysis) => request.post('/api/questions/update-answer', { question_id: questionId, answer, analysis }).then(r => r.data),
   getStats: () => request.get('/api/questions/stats').then(r => r.data)
 }
 
