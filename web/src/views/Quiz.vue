@@ -1,29 +1,28 @@
-<template>
+﻿<template>
   <div class="quiz-page">
-    <!-- 加载中 -->
+    <!-- 鍔犺浇涓?-->
     <div v-if="loading" class="loading-box">
       <el-icon class="loading-icon"><Loading /></el-icon>
-      <span>加载题目中...</span>
+      <span>鍔犺浇棰樼洰涓?..</span>
     </div>
     
-    <!-- 答题结果 -->
+    <!-- 绛旈缁撴灉 -->
     <div v-else-if="showResult" class="result-card">
-      <div class="result-emoji">{{ quizResult.score >= 60 ? '🎉' : '💪' }}</div>
+      <div class="result-emoji">{{ quizResult.score >= 60 ? '馃帀' : '馃挭' }}</div>
       <div class="result-score">{{ quizResult.correct }}/{{ quizResult.total }}</div>
       <div 
         class="result-text" 
         :style="{ color: quizResult.score >= 60 ? '#2e7d32' : '#e94560' }"
       >
-        正确率 {{ quizResult.score }}%
+        姝ｇ‘鐜?{{ quizResult.score }}%
       </div>
       <el-button type="primary" size="large" @click="retry">
-        再来一轮
-      </el-button>
+        鍐嶆潵涓€杞?      </el-button>
     </div>
     
-    <!-- 答题界面 -->
+    <!-- 绛旈鐣岄潰 -->
     <template v-else>
-      <!-- 进度条和题数选择 -->
+      <!-- 杩涘害鏉″拰棰樻暟閫夋嫨 -->
       <div class="progress-header">
         <el-progress 
           :percentage="Math.round((currentIndex + 1) / questions.length * 100)" 
@@ -36,17 +35,17 @@
           </el-button>
           <template #dropdown>
             <el-dropdown-menu>
-              <el-dropdown-item command="10">10 题</el-dropdown-item>
-              <el-dropdown-item command="30">30 题</el-dropdown-item>
-              <el-dropdown-item command="50">50 题</el-dropdown-item>
-              <el-dropdown-item command="100">100 题</el-dropdown-item>
-              <el-dropdown-item command="999">全部</el-dropdown-item>
+              <el-dropdown-item command="10">10 棰?/el-dropdown-item>
+              <el-dropdown-item command="30">30 棰?/el-dropdown-item>
+              <el-dropdown-item command="50">50 棰?/el-dropdown-item>
+              <el-dropdown-item command="100">100 棰?/el-dropdown-item>
+              <el-dropdown-item command="999">鍏ㄩ儴</el-dropdown-item>
             </el-dropdown-menu>
           </template>
         </el-dropdown>
       </div>
       
-      <!-- 题目头部 -->
+      <!-- 棰樼洰澶撮儴 -->
       <div class="q-header">
         <el-tag :type="getTypeTagType(currentQuestion?.type)" effect="dark">
           {{ typeTag }}
@@ -54,12 +53,12 @@
         <span class="q-number">{{ currentIndex + 1 }} / {{ questions.length }}</span>
       </div>
       
-      <!-- 题目内容 -->
+      <!-- 棰樼洰鍐呭 -->
       <el-card class="q-card" v-if="currentQuestion">
         <div class="q-content">{{ currentQuestion.content }}</div>
       </el-card>
       
-      <!-- 选项列表 -->
+      <!-- 閫夐」鍒楄〃 -->
       <div v-if="currentOptions.length > 0" class="options-list">
         <div
           v-for="option in currentOptions"
@@ -76,20 +75,20 @@
         </div>
       </div>
       
-      <!-- 填空/简答输入框 -->
+      <!-- 濉┖/绠€绛旇緭鍏ユ -->
       <div v-else class="fill-section">
         <el-input
           v-model="userAnswer"
           type="textarea"
           :rows="4"
-          placeholder="请在此输入你的答案"
+          placeholder="璇峰湪姝よ緭鍏ヤ綘鐨勭瓟妗?
           maxlength="500"
           show-word-limit
           :disabled="questionState === 'confirmed'"
         />
       </div>
       
-      <!-- 答题中操作按钮 -->
+      <!-- 绛旈涓搷浣滄寜閽?-->
       <div v-if="questionState === 'answering'" class="action-buttons">
         <el-button 
           type="primary" 
@@ -97,7 +96,7 @@
           class="submit-btn"
           @click="confirmAnswer"
         >
-          确认答案
+          纭绛旀
         </el-button>
         <el-button 
           v-if="currentIndex > 0" 
@@ -105,26 +104,25 @@
           class="prev-btn"
           @click="goPrev"
         >
-          上一题
-        </el-button>
+          涓婁竴棰?        </el-button>
       </div>
       
-      <!-- 答案反馈 -->
+      <!-- 绛旀鍙嶉 -->
       <div v-if="questionState === 'confirmed' && feedback" class="feedback-box">
         <div 
           class="feedback-title"
           :class="feedback.isCorrect ? 'correct' : 'wrong'"
         >
-          {{ feedback.isCorrect ? '✅ 回答正确！' : '❌ 回答错误' }}
+          {{ feedback.isCorrect ? '鉁?鍥炵瓟姝ｇ‘锛? : '鉂?鍥炵瓟閿欒' }}
         </div>
         <div v-if="!feedback.isCorrect" class="my-answer">
-          你的答案：{{ feedback.myAnswer || '(未作答)' }}
+          浣犵殑绛旀锛歿{ feedback.myAnswer || '(鏈綔绛?' }}
         </div>
         <div class="correct-answer">
-          正确答案：{{ feedback.correctAnswer }}
+          姝ｇ‘绛旀锛歿{ feedback.correctAnswer }}
         </div>
         <div v-if="feedback.analysis" class="analysis">
-          📖 {{ feedback.analysis }}
+          馃摉 {{ feedback.analysis }}
         </div>
         
         <el-button 
@@ -133,7 +131,7 @@
           class="next-btn"
           @click="goNext"
         >
-          {{ currentIndex >= questions.length - 1 ? '查看成绩' : '下一题' }}
+          {{ currentIndex >= questions.length - 1 ? '鏌ョ湅鎴愮哗' : '涓嬩竴棰? }}
         </el-button>
       </div>
     </template>
@@ -164,14 +162,14 @@ const quizResult = ref(null)
 const loading = ref(true)
 const typeTag = ref('')
 const quizCount = ref(30)
-const quizCountText = ref('30 题')
+const quizCountText = ref('30 棰?)
 
 const typeNames = {
-  single: '单选',
-  multi: '多选',
-  judge: '判断',
-  fill: '填空',
-  essay: '简答'
+  single: '鍗曢€?,
+  multi: '澶氶€?,
+  judge: '鍒ゆ柇',
+  fill: '濉┖',
+  essay: '绠€绛?
 }
 
 const getTypeTagType = (type) => {
@@ -187,7 +185,7 @@ const getTypeTagType = (type) => {
 
 const handleCountChange = (command) => {
   const counts = { '10': 10, '30': 30, '50': 50, '100': 100, '999': 999 }
-  const texts = { '10': '10 题', '30': '30 题', '50': '50 题', '100': '100 题', '999': '全部' }
+  const texts = { '10': '10 棰?, '30': '30 棰?, '50': '50 棰?, '100': '100 棰?, '999': '鍏ㄩ儴' }
   quizCount.value = counts[command]
   quizCountText.value = texts[command]
   loadQuestions()
@@ -196,9 +194,9 @@ const handleCountChange = (command) => {
 const loadQuestions = async () => {
   loading.value = true
   try {
-    const data = await quizApi.startQuiz(bankId.value, quizCount.value)
+    const data = await quizApi.start(bankId.value, quizCount.value)
     if (!data || data.length === 0) {
-      ElMessage.warning('题库为空')
+      ElMessage.warning('棰樺簱涓虹┖')
       loading.value = false
       return
     }
@@ -212,7 +210,7 @@ const loadQuestions = async () => {
     showResult.value = false
     updateCurrent()
   } catch (e) {
-    ElMessage.error('加载失败')
+    ElMessage.error('鍔犺浇澶辫触')
   } finally {
     loading.value = false
   }
@@ -227,7 +225,7 @@ const updateCurrent = () => {
   }
   currentQuestion.value = q
   
-  // 解析选项
+  // 瑙ｆ瀽閫夐」
   const options = q.options 
     ? q.options.split(/\r?\n/).filter(o => o.trim()) 
     : []
@@ -270,7 +268,7 @@ const confirmAnswer = async () => {
   
   const ans = userAnswer.value
   if (!ans && currentOptions.value.length > 0) {
-    ElMessage.warning('请先选择答案')
+    ElMessage.warning('璇峰厛閫夋嫨绛旀')
     return
   }
   
@@ -286,7 +284,7 @@ const confirmAnswer = async () => {
     if (r.is_correct) correctCount.value++
     totalCount.value++
   } catch (e) {
-    ElMessage.error('判断失败')
+    ElMessage.error('鍒ゆ柇澶辫触')
   }
 }
 
@@ -322,7 +320,7 @@ const retry = () => {
 }
 
 onMounted(() => {
-  // 从localStorage获取题库ID
+  // 浠巐ocalStorage鑾峰彇棰樺簱ID
   const savedBankId = localStorage.getItem('quizBankId') || ''
   bankId.value = savedBankId
   loadQuestions()
@@ -511,7 +509,7 @@ onMounted(() => {
   width: 100%;
 }
 
-/* 移动端适配 */
+/* 绉诲姩绔€傞厤 */
 @media (max-width: 768px) {
   .result-card {
     padding: 30px 20px;
