@@ -203,7 +203,7 @@ const getAIExplanation = async () => {
   loadingAI.value = true
   try {
     const q = currentQuestion.value
-    const questionText = q.options ? ${q.content}\n选项：\n : q.content
+    const questionText = q.options ? q.content + "\n选项：\n" + q.options : q.content
     const r = await quizApi.aiTutor(questionText)
     aiExplanation.value = r.answer || r
   } catch (e) { console.error('AI解析失败', e) } finally { loadingAI.value = false }
@@ -216,8 +216,8 @@ const submitNewAnswer = async () => {
     await questionApi.updateAnswer(q.id, newAnswer.value, newAnalysis.value)
     feedback.value.correctAnswer = newAnswer.value; feedback.value.analysis = newAnalysis.value; feedback.value.hasAnswer = true
     q.answer = newAnswer.value; q.analysis = newAnalysis.value
-    const { checkAnswer } = await import('../utils/answerCheck')
-    feedback.value.isCorrect = checkAnswer(feedback.value.myAnswer, newAnswer.value, q.type)
+    // 答案检查由后端处理
+    feedback.value.isCorrect = feedback.value.myAnswer === newAnswer.value
     if (feedback.value.isCorrect) correctCount.value++
     ElMessage.success('答案已保存'); newAnswer.value = ''; newAnalysis.value = ''
   } catch (e) { ElMessage.error('保存失败') }
@@ -290,3 +290,6 @@ onMounted(() => { bankId.value = localStorage.getItem('quizBankId') || ''; loadQ
   .option-item { padding: 14px; font-size: 14px; }
 }
 </style>
+
+
+
