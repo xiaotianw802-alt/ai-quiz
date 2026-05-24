@@ -1,6 +1,5 @@
-﻿<template>
+<template>
   <div class="layout">
-    <!-- PC端侧边栏 -->
     <div class="sidebar" :class="{ collapsed: sidebarCollapsed }">
       <div class="sidebar-header">
         <span class="sidebar-logo" v-if="!sidebarCollapsed">📝 AI刷题</span>
@@ -10,6 +9,7 @@
         <el-menu-item index="/index"><el-icon><Collection /></el-icon><span>题库</span></el-menu-item>
         <el-menu-item index="/quiz"><el-icon><EditPen /></el-icon><span>刷题</span></el-menu-item>
         <el-menu-item index="/review"><el-icon><Document /></el-icon><span>错题本</span></el-menu-item>
+        <el-menu-item index="/ai-tutor"><el-icon><ChatDotRound /></el-icon><span>AI辅导</span></el-menu-item>
         <el-menu-item index="/upload"><el-icon><Upload /></el-icon><span>导入</span></el-menu-item>
       </el-menu>
       <div class="sidebar-footer">
@@ -18,9 +18,7 @@
       </div>
     </div>
 
-    <!-- 主内容区 -->
     <div class="main-content">
-      <!-- 移动端顶部 -->
       <div class="mobile-header">
         <span class="mobile-title">📝 AI刷题</span>
         <span class="mobile-user">{{ username }}</span>
@@ -31,11 +29,11 @@
       </div>
     </div>
 
-    <!-- 移动端底部导航 -->
     <div class="mobile-tabbar">
       <router-link to="/index" class="tab-item" :class="{ active: activeMenu === '/index' }">📚 题库</router-link>
       <router-link to="/quiz" class="tab-item" :class="{ active: activeMenu === '/quiz' }">✏️ 刷题</router-link>
       <router-link to="/review" class="tab-item" :class="{ active: activeMenu === '/review' }">📋 错题</router-link>
+      <router-link to="/ai-tutor" class="tab-item" :class="{ active: activeMenu === '/ai-tutor' }">🤖 AI</router-link>
       <router-link to="/upload" class="tab-item" :class="{ active: activeMenu === '/upload' }">📄 导入</router-link>
     </div>
   </div>
@@ -45,6 +43,7 @@
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { Collection, EditPen, Document, Upload, SwitchButton, ChatDotRound } from '@element-plus/icons-vue'
 
 const route = useRoute()
 const router = useRouter()

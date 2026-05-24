@@ -1,4 +1,4 @@
-﻿import { createRouter, createWebHashHistory } from 'vue-router'
+import { createRouter, createWebHashHistory } from 'vue-router'
 
 const routes = [
   {
@@ -21,7 +21,8 @@ const routes = [
       { path: 'index', name: 'Index', component: () => import('../views/Index.vue') },
       { path: 'quiz', name: 'Quiz', component: () => import('../views/Quiz.vue') },
       { path: 'review', name: 'Review', component: () => import('../views/Review.vue') },
-      { path: 'upload', name: 'Upload', component: () => import('../views/Upload.vue') }
+      { path: 'upload', name: 'Upload', component: () => import('../views/Upload.vue') },
+      { path: 'ai-tutor', name: 'AITutor', component: () => import('../views/AITutor.vue') }
     ]
   }
 ]

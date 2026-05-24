@@ -1,12 +1,9 @@
-﻿import axios from 'axios'
+import axios from 'axios'
 import { ElMessage } from 'element-plus'
 
-// 自动检测API地址：
-// 1. 生产环境：使用当前域名
-// 2. 开发环境：使用vite代理
 const baseURL = import.meta.env.PROD ? '' : '/'
 
-const request = axios.create({ baseURL, timeout: 30000 })
+const request = axios.create({ baseURL, timeout: 60000 })
 
 request.interceptors.request.use(config => {
   const token = localStorage.getItem('token')
@@ -48,7 +45,8 @@ export const questionApi = {
 export const quizApi = {
   start: (bankId, count = 10) => request.get(`/api/quiz/start?bank_id=${bankId || ''}&count=${count}`).then(r => r.data),
   submit: (answers) => request.post('/api/quiz/submit', { answers }).then(r => r.data),
-  explain: (questionId) => request.post('/api/quiz/explain', { question_id: questionId }).then(r => r.data)
+  explain: (questionId) => request.post('/api/quiz/explain', { question_id: questionId }).then(r => r.data),
+  aiTutor: (question) => request.post('/api/quiz/ai-tutor', { question }).then(r => r.data)
 }
 
 export const uploadApi = {
