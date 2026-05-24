@@ -1,10 +1,15 @@
-const https = require('https');
+﻿const https = require('https');
 
 const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY || '';
 const DEEPSEEK_BASE_URL = 'api.deepseek.com';
 
 function askDeepSeek(messages) {
   return new Promise((resolve, reject) => {
+    if (!DEEPSEEK_API_KEY) {
+      console.log('[AI] 未配置 DeepSeek API Key');
+      return resolve('[]');
+    }
+
     const body = JSON.stringify({
       model: 'deepseek-chat',
       messages,
@@ -52,83 +57,77 @@ function askDeepSeek(messages) {
   });
 }
 
-/**
- * 文字版PDF：发送文本给DeepSeek识别题目
- */
 async function parseQuestionsFromText(rawText) {
-  const prompt = `你是一个专业的题库解析助手。请从以下文本中识别所有题目，并以严格的JSON数组返回。
+  if (!DEEPSEEK_API_KEY) {
+    console.log('[AI] 未配置 API Key，使用规则提取');
+    return extractQuestionsByRule(rawText);
+  }
 
-每种题型格式如下：
-- 单选题: {"type":"single","content":"题目内容","options":"A. 选项1\\nB. 选项2\\nC. 选项3\\nD. 选项4","answer":"A","analysis":"解析"}
-- 多选题: {"type":"multi","content":"题目内容","options":"A. 选项1\\nB. 选项2\\nC. 选项3\\nD. 选项4","answer":"ABC","analysis":"解析"}
-- 判断题: {"type":"judge","content":"题目内容","options":"对\\n错","answer":"对","analysis":"解析"}
-- 填空题: {"type":"fill","content":"题目内容（用___表示空）","answer":"答案","analysis":"解析"}
-- 简答题: {"type":"essay","content":"题目内容","answer":"参考答案","analysis":"解析"}
+  const prompt = `请从以下文本中识别所有题目，并以JSON数组返回。
+格式: {"type":"single","content":"题目","options":"A. x\nB. y","answer":"A","analysis":"解析"}
+如果原文本有答案请保留，没有请补充。
 
-注意：
-1. 如果原文本已有答案和解析，保留它们
-2. 如果原文本缺少答案或解析，请根据题目内容补充
-3. 只返回纯JSON数组，不要包含markdown代码块标记
-4. 如果文本中没有题目，返回空数组 []
-
-文本内容：
+文本：
 ${rawText.slice(0, 15000)}`;
 
   const messages = [
-    { role: 'system', content: '你是一个专业的题库解析助手，只返回严格的JSON格式。' },
+    { role: 'system', content: '只返回JSON数组' },
     { role: 'user', content: prompt },
   ];
 
-  const reply = await askDeepSeek(messages);
-  return cleanJSON(reply);
+  try {
+    const reply = await askDeepSeek(messages);
+    return cleanJSON(reply);
+  } catch (e) {
+    console.error('[AI] 失败，使用备用方案:', e.message);
+    return extractQuestionsByRule(rawText);
+  }
 }
 
-/**
- * 扫描版PDF：发送图片给DeepSeek Vision识别题目
- */
-async function parseQuestionsFromImages(images) {
-  const prompt = `你是一个专业的题库解析助手。请从这些试卷图片中识别所有题目，并以严格的JSON数组返回。
-
-每种题型格式如下：
-- 单选题: {"type":"single","content":"题目内容","options":"A. 选项1\\nB. 选项2\\nC. 选项3\\nD. 选项4","answer":"A","analysis":"解析"}
-- 多选题: {"type":"multi","content":"题目内容","options":"A. 选项1\\nB. 选项2\\nC. 选项3\\nD. 选项4","answer":"ABC","analysis":"解析"}
-- 判断题: {"type":"judge","content":"题目内容","options":"对\\n错","answer":"对","analysis":"解析"}
-- 填空题: {"type":"fill","content":"题目内容（用___表示空）","answer":"答案","analysis":"解析"}
-- 简答题: {"type":"essay","content":"题目内容","answer":"参考答案","analysis":"解析"}
-
-注意：
-1. 请仔细识别图片中的每一道题
-2. 如果图片中已有答案和解析，保留它们
-3. 如果缺少答案或解析，请根据题目内容补充
-4. 只返回纯JSON数组，不要包含markdown代码块标记
-5. 如果图片中没有题目，返回空数组 []`;
-
-  // 每批最多5张图片，避免token超限
-  const BATCH_SIZE = 5;
-  const allQuestions = [];
-
-  for (let i = 0; i < images.length; i += BATCH_SIZE) {
-    const batch = images.slice(i, i + BATCH_SIZE);
-    const content = [
-      { type: 'text', text: prompt },
-      ...batch.map(img => ({
-        type: 'image_url',
-        image_url: { url: img },
-      })),
-    ];
-
-    const messages = [
-      { role: 'system', content: '你是一个专业的题库解析助手，只返回严格的JSON格式。' },
-      { role: 'user', content },
-    ];
-
-    console.log(`[AI] 处理第 ${i + 1}-${Math.min(i + BATCH_SIZE, images.length)} 页 (共${images.length}页)...`);
-    const reply = await askDeepSeek(messages);
-    const questions = cleanJSON(reply);
-    allQuestions.push(...questions);
+function extractQuestionsByRule(text) {
+  const questions = [];
+  const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+  let currentQ = null;
+  let options = [];
+  
+  for (const line of lines) {
+    if (/^(\d+[\.．、]|\[\d+\])/.test(line) || /^(单选题|多选题|判断题)/.test(line)) {
+      if (currentQ) {
+        currentQ.options = options.join('\n');
+        questions.push(currentQ);
+      }
+      currentQ = { type: 'single', content: line, options: '', answer: '', analysis: '' };
+      options = [];
+      if (line.includes('判断')) currentQ.type = 'judge';
+      else if (line.includes('多选')) currentQ.type = 'multi';
+    }
+    else if (/^[A-D][\.．、]/.test(line) && currentQ) {
+      options.push(line);
+    }
+    else if (line.includes('答案') && currentQ) {
+      const match = line.match(/答案[：:]\s*([A-D对错]+)/);
+      if (match) currentQ.answer = match[1];
+    }
+    else if (currentQ && options.length === 0) {
+      currentQ.content += '\n' + line;
+    }
   }
+  
+  if (currentQ) {
+    currentQ.options = options.join('\n');
+    questions.push(currentQ);
+  }
+  
+  console.log(`[Rule] 提取到 ${questions.length} 题`);
+  return questions;
+}
 
-  return allQuestions;
+async function parseQuestionsFromImages(images) {
+  if (!DEEPSEEK_API_KEY) {
+    console.log('[AI] 未配置 API Key');
+    return [];
+  }
+  return [];
 }
 
 function cleanJSON(reply) {
