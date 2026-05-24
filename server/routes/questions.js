@@ -1,4 +1,4 @@
-const express = require('express');
+﻿const express = require('express');
 const router = express.Router();
 const { getBanks, getQuestions, getWrongQuestions, getTotalStats, getWrongStatsByBank, isQuestionOwner, saveRecord, getDB } = require('../db');
 const { authMiddleware } = require('../middleware/auth');
@@ -41,31 +41,41 @@ router.post('/check', (req, res) => {
     const { question_id, user_answer } = req.body;
     const db = getDB();
     if (!isQuestionOwner(req.userId, question_id)) {
-      return res.status(403).json({ ok: false, error: '无权访问该题目' });
+      return res.status(403).json({ ok: false, error: '鏃犳潈璁块棶璇ラ鐩? });
     }
     const q = db.prepare('SELECT answer, analysis, type FROM questions WHERE id=?').get(question_id);
-    if (!q) return res.status(404).json({ ok: false, error: '题目不存在' });
+    if (!q) return res.status(404).json({ ok: false, error: '棰樼洰涓嶅瓨鍦? });
     const isCorrect = checkAnswer(user_answer, q.answer, q.type);
     saveRecord(req.userId, question_id, user_answer, isCorrect);
     res.json({ ok: true, data: { is_correct: isCorrect, answer: q.answer, analysis: q.analysis, has_answer: !!(q.answer && q.answer.trim()) } });
   } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
 });
 
-// 补充/更新题目答案
+// 琛ュ厖/鏇存柊棰樼洰绛旀
 router.post('/update-answer', (req, res) => {
   try {
     const { question_id, answer, analysis } = req.body;
-    if (!question_id) return res.status(400).json({ ok: false, error: '缺少题目ID' });
+    if (!question_id) return res.status(400).json({ ok: false, error: '缂哄皯棰樼洰ID' });
     
     const db = getDB();
     if (!isQuestionOwner(req.userId, question_id)) {
-      return res.status(403).json({ ok: false, error: '无权修改该题目' });
+      return res.status(403).json({ ok: false, error: '鏃犳潈淇敼璇ラ鐩? });
     }
     
     const stmt = db.prepare('UPDATE questions SET answer = ?, analysis = ? WHERE id = ?');
     stmt.run(answer || '', analysis || '', question_id);
     
-    res.json({ ok: true, data: { message: '答案已更新' } });
+    res.json({ ok: true, data: { message: '绛旀宸叉洿鏂? } });
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+});
+
+// 删除题库
+router.delete('/bank/:id', (req, res) => {
+  try {
+    const { deleteBank } = require('../db');
+    const bankId = req.params.id;
+    deleteBank(req.userId, bankId);
+    res.json({ ok: true, data: { message: '题库已删除' } });
   } catch (e) { res.status(500).json({ ok: false, error: e.message }); }
 });
 

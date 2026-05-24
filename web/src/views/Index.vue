@@ -1,84 +1,84 @@
-<template>
+﻿<template>
   <div class="index-page">
-    <!-- 头部卡片 -->
+    <!-- 澶撮儴鍗＄墖 -->
     <div class="header-card">
       <div class="header-content" @click="showServerDialog = true">
-        <h1>AI 刷题</h1>
-        <p class="subtitle">智能解析 · 高效备考</p>
-        <p class="server-hint">点击切换服务器</p>
+        <h1>AI 鍒烽</h1>
+        <p class="subtitle">鏅鸿兘瑙ｆ瀽 路 楂樻晥澶囪€?/p>
+        <p class="server-hint">鐐瑰嚮鍒囨崲鏈嶅姟鍣?/p>
       </div>
       
-      <!-- 统计信息 -->
+      <!-- 缁熻淇℃伅 -->
       <div class="stats-row">
         <div class="stat-item">
           <div class="stat-num">{{ stats.total_q }}</div>
-          <div class="stat-label">总题量</div>
+          <div class="stat-label">鎬婚閲?/div>
         </div>
         <div class="stat-divider"></div>
         <div class="stat-item">
           <div class="stat-num">{{ stats.wrong_q }}</div>
-          <div class="stat-label">错题数</div>
+          <div class="stat-label">閿欓鏁?/div>
         </div>
         <div class="stat-divider"></div>
         <div class="stat-item">
           <div class="stat-num">{{ correctRate }}%</div>
-          <div class="stat-label">正确率</div>
+          <div class="stat-label">姝ｇ‘鐜?/div>
         </div>
       </div>
     </div>
     
-    <!-- 连接错误提示 -->
+    <!-- 杩炴帴閿欒鎻愮ず -->
     <el-alert
       v-if="!connected && !loading"
-      title="后端未连接"
-      description="点击上方标题切换服务器地址"
+      title="鍚庣鏈繛鎺?
+      description="鐐瑰嚮涓婃柟鏍囬鍒囨崲鏈嶅姟鍣ㄥ湴鍧€"
       type="warning"
       show-icon
       :closable="false"
       class="warn-card"
     >
       <template #default>
-        <el-button type="primary" size="small" @click="loadData">重试</el-button>
+        <el-button type="primary" size="small" @click="loadData">閲嶈瘯</el-button>
       </template>
     </el-alert>
     
-    <!-- 加载中 -->
+    <!-- 鍔犺浇涓?-->
     <div v-if="loading" class="loading-box">
       <el-icon class="loading-icon"><Loading /></el-icon>
-      <span>加载中...</span>
+      <span>鍔犺浇涓?..</span>
     </div>
     
-    <!-- 题库列表 -->
+    <!-- 棰樺簱鍒楄〃 -->
     <div v-else class="section">
       <div class="section-header">
-        <h2 class="section-title">📚 我的题库</h2>
+        <h2 class="section-title">馃摎 鎴戠殑棰樺簱</h2>
         <el-button 
           v-if="banks.length === 0" 
           type="primary" 
           size="small" 
           @click="goToUpload"
         >
-          + 导入
+          + 瀵煎叆
         </el-button>
       </div>
       
-      <!-- 空状态 -->
+      <!-- 绌虹姸鎬?-->
       <el-empty
         v-if="banks.length === 0 && connected"
-        description="还没有题库"
+        description="杩樻病鏈夐搴?
         class="empty-box"
       >
         <template #image>
-          <div class="empty-icon">📭</div>
+          <div class="empty-icon">馃摥</div>
         </template>
-        <p class="empty-desc">上传文件，AI 自动识别题目</p>
+        <p class="empty-desc">涓婁紶鏂囦欢锛孉I 鑷姩璇嗗埆棰樼洰</p>
         <el-button type="primary" @click="goToUpload">
           <el-icon><Document /></el-icon>
-          导入题库
+          瀵煎叆棰樺簱
         </el-button>
       </el-empty>
       
-      <!-- 题库卡片列表 -->
+      <!-- 棰樺簱鍗＄墖鍒楄〃 -->
       <div class="bank-list">
         <el-card
           v-for="bank in banks"
@@ -91,10 +91,8 @@
             <div class="bank-info">
               <div class="bank-name">{{ bank.name }}</div>
               <div class="bank-meta">
-                {{ bank.q_count }} 道题目
-                <span v-if="bank.wrong_count > 0" class="wrong-count">
-                  · {{ bank.wrong_count }} 道错题
-                </span>
+                {{ bank.q_count }} 閬撻鐩?                <span v-if="bank.wrong_count > 0" class="wrong-count">
+                  路 {{ bank.wrong_count }} 閬撻敊棰?                </span>
               </div>
             </div>
           </div>
@@ -105,29 +103,28 @@
               @click="goQuiz(bank.id)"
             >
               <el-icon><VideoPlay /></el-icon>
-              开始刷题
-            </el-button>
+              寮€濮嬪埛棰?            </el-button>
             <el-button
               class="bank-btn-wrong"
               @click="goWrong(bank.id)"
             >
               <el-icon><DocumentChecked /></el-icon>
-              错题本{{ bank.wrong_count > 0 ? `(${bank.wrong_count})` : '' }}
+              閿欓鏈瑊{ bank.wrong_count > 0 ? `(${bank.wrong_count})` : '' }}
             </el-button>
           </div>
         </el-card>
       </div>
     </div>
     
-    <!-- 服务器设置对话框 -->
+    <!-- 鏈嶅姟鍣ㄨ缃璇濇 -->
     <el-dialog
       v-model="showServerDialog"
-      title="服务器设置"
+      title="鏈嶅姟鍣ㄨ缃?
       width="90%"
       :max-width="400"
     >
       <el-form>
-        <el-form-item label="服务器地址">
+        <el-form-item label="鏈嶅姟鍣ㄥ湴鍧€">
           <el-input
             v-model="serverUrl"
             placeholder="http://10.238.172.181:3000"
@@ -135,9 +132,9 @@
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="showServerDialog = false">取消</el-button>
-        <el-button type="primary" @click="setDefaultServer">恢复默认</el-button>
-        <el-button type="primary" @click="saveServer">确定</el-button>
+        <el-button @click="showServerDialog = false">鍙栨秷</el-button>
+        <el-button type="primary" @click="setDefaultServer">鎭㈠榛樿</el-button>
+        <el-button type="primary" @click="saveServer">纭畾</el-button>
       </template>
     </el-dialog>
   </div>
@@ -146,8 +143,8 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import { Loading, VideoPlay, DocumentChecked, Document } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { Loading, VideoPlay, DocumentChecked, Document, Delete } from '@element-plus/icons-vue'
 import { questionApi } from '../utils/api'
 
 const router = useRouter()
@@ -177,7 +174,7 @@ const loadData = async () => {
     connected.value = true
   } catch (e) {
     connected.value = false
-    ElMessage.error('连接服务器失败')
+    ElMessage.error('杩炴帴鏈嶅姟鍣ㄥけ璐?)
   } finally {
     loading.value = false
   }
@@ -192,6 +189,17 @@ const goWrong = (bankId) => {
   router.push({ path: '/review', query: { bank_id: bankId } })
 }
 
+const deleteBank = async (bankId) => {
+  try {
+    await ElMessageBox.confirm('确定要删除这个题库吗？', '提示', { type: 'warning' })
+    await questionApi.deleteBank(bankId)
+    ElMessage.success('题库已删除')
+    loadData()
+  } catch (e) {
+    if (e !== 'cancel') ElMessage.error(e.message || '删除失败')
+  }
+}
+
 const goToUpload = () => {
   router.push('/upload')
 }
@@ -199,7 +207,7 @@ const goToUpload = () => {
 const saveServer = () => {
   localStorage.setItem('serverUrl', serverUrl.value)
   showServerDialog.value = false
-  ElMessage.success('服务器地址已保存，重新加载中...')
+  ElMessage.success('鏈嶅姟鍣ㄥ湴鍧€宸蹭繚瀛橈紝閲嶆柊鍔犺浇涓?..')
   setTimeout(() => {
     window.location.reload()
   }, 500)
@@ -395,7 +403,11 @@ onMounted(() => {
   flex: 1;
 }
 
-/* 移动端适配 */
+.bank-btn-delete {
+  flex: 0 0 auto;
+}
+
+/* 绉诲姩绔€傞厤 */
 @media (max-width: 768px) {
   .header-card {
     padding: 20px;
@@ -414,3 +426,8 @@ onMounted(() => {
   }
 }
 </style>
+
+
+
+
+

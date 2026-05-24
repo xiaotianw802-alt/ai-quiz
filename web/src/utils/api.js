@@ -40,7 +40,7 @@ export const questionApi = {
   getWrongQuestions: (bankId, limit = 30) => request.get(`/api/questions/wrong?bank_id=${bankId || ''}&limit=${limit}`),
   checkAnswer: (questionId, userAnswer) => request.post('/api/questions/check', { question_id: questionId, user_answer: userAnswer }),
   updateAnswer: (questionId, answer, analysis) => request.post('/api/questions/update-answer', { question_id: questionId, answer, analysis }),
-  getStats: () => request.get('/api/questions/stats')
+  deleteBank: (bankId) => request.delete(/api/questions/bank/),\n  getStats: () => request.get('/api/questions/stats')
 }
 
 export const quizApi = {
@@ -61,3 +61,4 @@ export const uploadApi = {
 }
 
 export default request
+

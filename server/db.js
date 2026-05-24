@@ -210,8 +210,27 @@ function isQuestionOwner(userId, questionId) {
   return !!result;
 }
 
+function isBankOwner(userId, bankId) {
+  const result = getDB().prepare(`
+    SELECT 1 FROM banks WHERE id = ? AND user_id = ?
+  `).get(bankId, userId);
+  return !!result;
+}
+
+function deleteBank(userId, bankId) {
+  const db = getDB();
+  if (!isBankOwner(userId, bankId)) {
+    throw new Error('无权删除该题库');
+  }
+  db.prepare('DELETE FROM banks WHERE id = ?').run(bankId);
+  return { success: true };
+}
+
 module.exports = {
   getDB, createUser, getUserByUsername, getUserById, verifyPassword,
   createBank, getBanks, addQuestions, getQuestions,
   getWrongQuestions, saveRecord, getWrongStatsByBank, getTotalStats, isQuestionOwner
 };
+
+
+
